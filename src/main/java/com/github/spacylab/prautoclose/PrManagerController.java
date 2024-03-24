@@ -23,10 +23,12 @@ public class PrManagerController {
     @GetMapping(path = "/opened-prs")
     public Object checkPrs(
             @RequestParam(value = "max_weeks", required = false) Integer maxWeeks,
-            @RequestParam(value = "access_token") String accessToken
+            @RequestParam(value = "accessToken") String accessToken,
+            @RequestParam(value = "projectId") String projectId
     ) {
         maxWeeks = maxWeeks == null ? MAX_REMINDER_WEEKS : maxWeeks;
         prManagerService.setAccessToken(accessToken);
+        prManagerService.setProjectId(projectId);
 
         PullRequestDTO[][] weekReminders = IntStream.range(1, maxWeeks).mapToObj(week -> {
             return Arrays.stream(prManagerService.checkPRsFromWeekRange(week, week + 1)).map(PullRequestDTO::new).toArray(PullRequestDTO[]::new);

@@ -19,6 +19,7 @@ import java.util.logging.Logger;
 public class PrManagerService {
     public static final String GITLAB_URL = "https://gitlab.com/api/v4";
     private String accessToken = "";
+    private String projectId = "";
     Logger logger = Logger.getLogger(getClass().getName());
 
     public GitlabMergeRequestDTO[] checkPRsFromWeekRange(Integer startWeek) {
@@ -32,7 +33,7 @@ public class PrManagerService {
 
     public GitlabMergeRequestDTO[] getOpenedPRsFromDateRange(ZonedDateTime before, ZonedDateTime after) {
         RestTemplate restTemplate = new RestTemplate();
-        var url = GITLAB_URL + "/projects/33560803/merge_requests";
+        var url = GITLAB_URL + "/projects/"+projectId+"/merge_requests";
 
         HttpHeaders headers = new HttpHeaders();
         headers.setAccept(Collections.singletonList(MediaType.APPLICATION_JSON));
@@ -59,5 +60,8 @@ public class PrManagerService {
 
     public void setAccessToken(String accessToken) {
         this.accessToken = accessToken;
+    }
+    public void setProjectId(String projectId) {
+        this.projectId = projectId;
     }
 }
