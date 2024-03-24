@@ -30,13 +30,13 @@ public class PrManagerController {
         prManagerService.setAccessToken(accessToken);
         prManagerService.setProjectId(projectId);
 
-        PullRequestDTO[][] weekReminders = IntStream.range(1, maxWeeks).mapToObj(week -> {
-            return Arrays.stream(prManagerService.checkPRsFromWeekRange(week, week + 1)).map(PullRequestDTO::new).toArray(PullRequestDTO[]::new);
-        }).toArray(PullRequestDTO[][]::new);
+        PullRequestDTO[][] weekReminders = IntStream.range(1, maxWeeks).mapToObj(week ->
+            Arrays.stream(prManagerService.checkPRsFromWeekRange(week, week + 1)).map(PullRequestDTO::new).toArray(PullRequestDTO[]::new)
+        ).toArray(PullRequestDTO[][]::new);
         var weekRest = Arrays.stream(prManagerService.checkPRsFromWeekRange(maxWeeks)).map(PullRequestDTO::new).toArray(PullRequestDTO[]::new);
 
         var oldPrsByWeek = new HashMap<String, Object>();
-        oldPrsByWeek.put("pr_to_be_closed", Arrays.stream(weekRest).map(PullRequestDTO::getAllProperties));
+        oldPrsByWeek.put("prToBeClosed", Arrays.stream(weekRest).map(PullRequestDTO::getAllProperties));
         for (int i = 0; i < weekReminders.length; i++) {
             oldPrsByWeek.put(String.valueOf(i), Arrays.stream(weekReminders[i]).map(PullRequestDTO::getAllProperties));
         }

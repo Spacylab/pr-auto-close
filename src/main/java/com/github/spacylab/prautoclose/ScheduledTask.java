@@ -12,7 +12,7 @@ public class ScheduledTask {
 
     @Scheduled(cron = "0 0 10 * * MON")
     public void executeDevCron() {
-        prManagerController.checkPrs(4, "access_token");
+        prManagerController.checkPrs(4, "access_token", "project_id");
     }
 
 }
