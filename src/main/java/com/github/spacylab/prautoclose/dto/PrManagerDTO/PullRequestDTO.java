@@ -33,7 +33,7 @@ public class PullRequestDTO {
             ),
             ZonedDateTime.now()
         );
-        this.days_untouched = Long.valueOf(durationLastUpdated.toDays()).intValue();
+        this.days_untouched = ((Long)durationLastUpdated.toDays()).intValue();
         this.author = gitlabMergeRequestDTO.getAuthor();
         this.id = gitlabMergeRequestDTO.getId();
         this.iid = gitlabMergeRequestDTO.getIid();
@@ -44,18 +44,18 @@ public class PullRequestDTO {
         this.has_conflicts = gitlabMergeRequestDTO.isHas_conflicts();
     }
     public Object getAllProperties() {
-        return new Object() {
-            public final String created_at = getCreated_at();
-            public final String updated_at = getUpdated_at();
-            public final Integer days_untouched = getDaysUntouched();
-            public final GitlabAuthor author = getAuthor();
-            public final Number id = getId();
-            public final Number iid = getIid();
-            public final Number project_id = getProject_id();
-            public final String title = getTitle();
-            public final String description = getDescription();
-            public final String web_url = getWeb_url();
-            public final boolean has_conflicts = isHas_conflicts();
+        return new Object[] {
+            this.created_at,
+            this.updated_at,
+            this.days_untouched,
+            this.author,
+            this.id,
+            this.iid,
+            this.project_id,
+            this.title,
+            this.description,
+            this.web_url,
+            this.has_conflicts,
         };
     }
 
@@ -80,7 +80,7 @@ public class PullRequestDTO {
                 ),
                 ZonedDateTime.now()
         );
-        this.days_untouched = Long.valueOf(durationLastUpdated.toDays()).intValue();
+        this.days_untouched = ((Long)durationLastUpdated.toDays()).intValue();
     }
 
     public Integer getDaysUntouched() {

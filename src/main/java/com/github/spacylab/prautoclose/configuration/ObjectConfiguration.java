@@ -10,7 +10,6 @@ public class ObjectConfiguration {
     @Bean
     public Jackson2ObjectMapperBuilder objectMapperBuilder() {
         Jackson2ObjectMapperBuilder builder = new Jackson2ObjectMapperBuilder();
-        System.out.println("ObjectConfiguration.objectMapperBuilder");
         builder.serializationInclusion(JsonInclude.Include.NON_NULL);
         return builder;
     }
