@@ -43,21 +43,6 @@ public class PullRequestDTO {
         this.web_url = gitlabMergeRequestDTO.getWeb_url();
         this.has_conflicts = gitlabMergeRequestDTO.isHas_conflicts();
     }
-    public Object getAllProperties() {
-        return new Object[] {
-            this.created_at,
-            this.updated_at,
-            this.days_untouched,
-            this.author,
-            this.id,
-            this.iid,
-            this.project_id,
-            this.title,
-            this.description,
-            this.web_url,
-            this.has_conflicts,
-        };
-    }
 
     public String getCreated_at() {
         return created_at;
