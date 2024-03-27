@@ -5,7 +5,7 @@ import com.github.spacylab.prautoclose.dto.PrManagerDTO.PullRequestDTO;
 import com.github.spacylab.prautoclose.dto.SlackDTO.SlackBlockDTO;
 import com.github.spacylab.prautoclose.dto.SlackDTO.SlackMessageDTO;
 import com.github.spacylab.prautoclose.dto.SlackDTO.SlackTextBlockDTO;
-import com.github.spacylab.prautoclose.services.PrManagerService;
+import com.github.spacylab.prautoclose.services.GitlabAPIService;
 import com.github.spacylab.prautoclose.services.SlackAPIService;
 
 import org.springframework.beans.factory.annotation.Value;
@@ -25,11 +25,13 @@ import java.util.stream.IntStream;
 public class PrManagerController {
     Logger logger = Logger.getLogger(getClass().getName());
     @Value("${pr-manager.max-weeks}") private Integer MAX_REMINDER_WEEKS;
-    PrManagerService prManagerService;
+    @Value("#{new Boolean('${pr-manager.should-close-prs:false}')}") private Boolean SHOULD_CLOSE_PRS;
+
+    GitlabAPIService gitlabAPIService;
     SlackAPIService slackAPIService;
 
-    public PrManagerController(PrManagerService prManagerService, SlackAPIService slackAPIService) {
-        this.prManagerService = prManagerService;
+    public PrManagerController(GitlabAPIService gitlabAPIService, SlackAPIService slackAPIService) {
+        this.gitlabAPIService = gitlabAPIService;
         this.slackAPIService = slackAPIService;
     }
 
@@ -40,13 +42,13 @@ public class PrManagerController {
             @RequestParam(value = "projectId") String projectId
     ) {
         maxWeeks = maxWeeks == null ? MAX_REMINDER_WEEKS : maxWeeks;
-        prManagerService.setAccessToken(accessToken);
-        prManagerService.setProjectId(projectId);
+        gitlabAPIService.setAccessToken(accessToken);
+        gitlabAPIService.setProjectId(projectId);
 
         PullRequestDTO[][] weekReminders = IntStream.range(1, maxWeeks).mapToObj(week ->
-            Arrays.stream(prManagerService.checkPRsFromWeekRange(week, week + 1)).map(PullRequestDTO::new).toArray(PullRequestDTO[]::new)
+            Arrays.stream(gitlabAPIService.checkPRsFromWeekRange(week, week + 1)).map(PullRequestDTO::new).toArray(PullRequestDTO[]::new)
         ).toArray(PullRequestDTO[][]::new);
-        var weekRest = Arrays.stream(prManagerService.checkPRsFromWeekRange(maxWeeks)).map(PullRequestDTO::new).toArray(PullRequestDTO[]::new);
+        var weekRest = Arrays.stream(gitlabAPIService.checkPRsFromWeekRange(maxWeeks)).map(PullRequestDTO::new).toArray(PullRequestDTO[]::new);
 
         var oldPrsByWeek = new HashMap<String, PullRequestDTO[]>();
         oldPrsByWeek.put("prToBeClosed", weekRest);
@@ -78,8 +80,11 @@ public class PrManagerController {
                 SlackBlockDTO sectionBlock = new SlackBlockDTO("section", new SlackTextBlockDTO("mrkdwn", txt));
                 slackMessage.addBlock(sectionBlock);
             });
-
         });
+
+        if (Boolean.TRUE.equals(SHOULD_CLOSE_PRS)) {
+            Arrays.stream(prs.get("prToBeClosed")).forEach(pr -> gitlabAPIService.closePR(pr.getIid().toString())) ;
+        }
 
         slackAPIService.setSlackWebhook(body.getSlackWebhook());
         return slackAPIService.sendSlackMessage(slackMessage);

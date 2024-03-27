@@ -16,7 +16,7 @@ import java.util.logging.Logger;
 
 
 @Service
-public class PrManagerService {
+public class GitlabAPIService {
     public static final String GITLAB_URL = "https://gitlab.com/api/v4";
     private String accessToken = "";
     private String projectId = "";
@@ -56,6 +56,28 @@ public class PrManagerService {
         var mrList = result.getBody();
         assert mrList != null;
         return mrList;
+    }
+
+    public Object closePR(String prId) {
+        RestTemplate restTemplate = new RestTemplate();
+        var url = GITLAB_URL + "/projects/"+projectId+"/merge_requests/"+prId;
+
+        HttpHeaders headers = new HttpHeaders();
+        headers.setAccept(Collections.singletonList(MediaType.APPLICATION_JSON));
+
+        var uriTemplate = UriComponentsBuilder.fromHttpUrl(url)
+                .queryParam("access_token", accessToken)
+                .queryParam("state_event", "close")
+                .toUriString();
+        logger.log(Level.INFO, uriTemplate);
+
+        ResponseEntity<Object> result = restTemplate.exchange(
+                uriTemplate,
+                HttpMethod.PUT,
+                new HttpEntity<>(headers),
+                Object.class
+        );
+        return result.getBody();
     }
 
     public void setAccessToken(String accessToken) {
