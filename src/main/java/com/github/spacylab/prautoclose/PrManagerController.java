@@ -8,6 +8,7 @@ import com.github.spacylab.prautoclose.dto.SlackDTO.SlackTextBlockDTO;
 import com.github.spacylab.prautoclose.services.PrManagerService;
 import com.github.spacylab.prautoclose.services.SlackAPIService;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -23,7 +24,7 @@ import java.util.stream.IntStream;
 @RestController
 public class PrManagerController {
     Logger logger = Logger.getLogger(getClass().getName());
-    private static final Integer MAX_REMINDER_WEEKS = 4;
+    @Value("${pr-manager.max-weeks}") private Integer MAX_REMINDER_WEEKS;
     PrManagerService prManagerService;
     SlackAPIService slackAPIService;
 
