@@ -3,11 +3,9 @@ package com.github.spacylab.prautoclose;
 import java.util.ArrayList;
 import java.util.Arrays;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.boot.SpringApplication;
 import org.springframework.boot.context.event.ApplicationReadyEvent;
-import org.springframework.context.ApplicationContext;
+import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.context.event.EventListener;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
@@ -21,12 +19,12 @@ public class ScheduledTask {
     @Value("${pr-manager.slack-webhook}") private String SLACK_WEBHOOK;
     @Value("${pr-manager.trigger-at-startup}") private Boolean TRIGGER_AT_STARTUP;
 
-    @Autowired
-    private ApplicationContext appContext;
+    private final ConfigurableApplicationContext applicationContext;
 
     PrManagerController prManagerController;
-    public ScheduledTask(PrManagerController prManagerController) {
+    public ScheduledTask(PrManagerController prManagerController, ConfigurableApplicationContext applicationContext) {
         this.prManagerController = prManagerController;
+        this.applicationContext = applicationContext;
     }
 
     @Scheduled(cron = "${pr-manager.cron.expression}")
@@ -39,7 +37,7 @@ public class ScheduledTask {
     public void executeAtStartup() {
         if (Boolean.TRUE.equals(TRIGGER_AT_STARTUP)) {
             executeDevCron(); 
-            SpringApplication.exit(appContext, () -> 0);
+            applicationContext.close();
         }
     }
 
