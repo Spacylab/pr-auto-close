@@ -69,9 +69,10 @@ public class PrManagerController {
         prs.entrySet().stream().forEach(entry -> {
             if (entry.getValue().length == 0) {return;}
 
+            String weekWording = "0".equals(entry.getKey()) ? "less than 1" : entry.getKey();
             String headerTxt = entry.getKey().equals("prToBeClosed") 
                 ? String.format(":bomb: PR more than %s weeks old :", MAX_REMINDER_WEEKS) 
-                : String.format(":hourglass: PR %s weeks old :", Integer.parseInt(entry.getKey()) + 1 );
+                : String.format(":hourglass: PR %s weeks old :", weekWording);
             SlackBlockDTO headerBlock = new SlackBlockDTO("header", new SlackTextBlockDTO("plain_text", headerTxt));
             slackMessage.addBlock(headerBlock);
 
