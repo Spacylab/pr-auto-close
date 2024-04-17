@@ -45,7 +45,7 @@ public class PrManagerController {
         gitlabAPIService.setAccessToken(accessToken);
         gitlabAPIService.setProjectId(projectId);
 
-        PullRequestDTO[][] weekReminders = IntStream.range(1, maxWeeks).mapToObj(week ->
+        PullRequestDTO[][] weekReminders = IntStream.range(0, maxWeeks + 1).mapToObj(week ->
             Arrays.stream(gitlabAPIService.checkPRsFromWeekRange(week, week + 1)).map(PullRequestDTO::new).toArray(PullRequestDTO[]::new)
         ).toArray(PullRequestDTO[][]::new);
         var weekRest = Arrays.stream(gitlabAPIService.checkPRsFromWeekRange(maxWeeks)).map(PullRequestDTO::new).toArray(PullRequestDTO[]::new);
@@ -87,6 +87,13 @@ public class PrManagerController {
         }
 
         slackAPIService.setSlackWebhook(body.getSlackWebhook());
+
+        if (slackMessage.getBlockCount() == 0) {
+            Logger.getLogger(getClass().getName()).info("No PRs found!");
+            slackMessage.addBlock(new SlackBlockDTO("section", new SlackTextBlockDTO("mrkdwn", ":tada: No PRs found! :tada:")));
+        }
+        Logger.getLogger(getClass().getName()).info("Sending slack message!");
+
         return slackAPIService.sendSlackMessage(slackMessage);
     }
 }

@@ -1,0 +1,13 @@
+version: '3.8'
+name: 'pr-auto-close'
+services: 
+  java-app:
+    environment:
+      - GITLAB_ACCESS_TOKEN=${GITLAB_ACCESS_TOKEN}
+      - GITLAB_PROJECT_IDS=${GITLAB_PROJECT_IDS}
+      - SLACK_WEBHOOK=${SLACK_WEBHOOK}
+    build: 
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "8080:8080"
