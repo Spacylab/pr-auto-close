@@ -1,14 +1,7 @@
 FROM public.ecr.aws/amazoncorretto/amazoncorretto:21 
- 
-WORKDIR /app
- 
-COPY .mvn/ .mvn
-COPY mvnw pom.xml ./
-RUN ./mvnw dependency:go-offline
- 
-COPY src ./src
+
+COPY target/pr-auto-close-*.jar /usr/local/pr-auto-close.jar
 
 EXPOSE 8080
-
-CMD ["./mvnw", "spring-boot:run"]
+ENTRYPOINT ["java", "-jar", "/usr/local/pr-auto-close.jar"]
 
