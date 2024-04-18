@@ -25,7 +25,7 @@ Fork this repo, do stuff and create a pull request.
 
 ### Things I might do or you can do
 
-- [ ] add docker support
+- [x] add docker support
 - [ ] handle errors
 - [ ] write tests 
 - [ ] add interfaces between the Controller and the APIs (so maybe we can add Github support and another messaging app) 

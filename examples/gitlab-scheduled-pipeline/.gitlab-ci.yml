@@ -1,0 +1,27 @@
+stages:
+  - schedules
+
+pr-auto-close:
+  image: docker:24.0.5
+  services:
+    - name: docker:24.0.5-dind
+      command: ["--mtu=1300","--tls=false"]
+  stage: schedules
+  script:
+    - docker pull spacylab/pr-auto-close:0.0.7
+    - docker run -e PR_TRIGGER_AT_STARTUP="true" -e GITLAB_ACCESS_TOKEN=${GITLAB_ACCESS_TOKEN} -e GITLAB_PROJECT_IDS=${GITLAB_PROJECT_IDS} -e SLACK_WEBHOOK=${SLACK_WEBHOOK} -p 8080:8080 spacylab/pr-auto-close:0.0.7
+  variables:
+      DOCKER_HOST: tcp://docker:2375
+      DOCKER_TLS_CERTDIR: ""
+      # those 3 vars needs to be CI/CD variables in your project
+      GITLAB_ACCESS_TOKEN: ${GITLAB_ACCESS_TOKEN}
+      GITLAB_PROJECT_IDS: ${GITLAB_PROJECT_IDS}
+      SLACK_WEBHOOK: ${SLACK_WEBHOOK}
+  only:
+    refs:
+      - trigger
+      - schedules
+      - web
+  tags:
+    - heavy
+    - mgmt
