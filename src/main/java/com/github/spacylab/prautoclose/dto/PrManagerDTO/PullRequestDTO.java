@@ -1,6 +1,7 @@
 package com.github.spacylab.prautoclose.dto.PrManagerDTO;
 
 import com.github.spacylab.prautoclose.dto.GitlabDTO.GitlabAuthor;
+import com.github.spacylab.prautoclose.dto.GitlabDTO.GitlabDetailedMergeStatus;
 import com.github.spacylab.prautoclose.dto.GitlabDTO.GitlabMergeRequestDTO;
 
 public class PullRequestDTO {
@@ -15,6 +16,7 @@ public class PullRequestDTO {
     private String description;
     private String web_url;
     private boolean has_conflicts;
+    private GitlabDetailedMergeStatus detailedMergeStatus;
 
     public PullRequestDTO() {
     }
@@ -30,6 +32,15 @@ public class PullRequestDTO {
         this.description = gitlabMergeRequestDTO.getDescription();
         this.web_url = gitlabMergeRequestDTO.getWeb_url();
         this.has_conflicts = gitlabMergeRequestDTO.isHas_conflicts();
+        this.detailedMergeStatus = gitlabMergeRequestDTO.getDetailed_merge_status();
+    }
+
+    public GitlabDetailedMergeStatus getDetailedMergeStatus() {
+        return detailedMergeStatus;
+    }
+
+    public String getDetailedMergeStatusText() {
+        return DetailedMergeStatusText.getDetailedMergeStatusText(detailedMergeStatus);
     }
 
     public String getLastUpdateText() {

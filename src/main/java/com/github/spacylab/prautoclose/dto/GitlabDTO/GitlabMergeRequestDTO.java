@@ -1,19 +1,19 @@
 package com.github.spacylab.prautoclose.dto.GitlabDTO;
 
-import org.springframework.format.annotation.DateTimeFormat;
-
 public class GitlabMergeRequestDTO {
     private Number id;
     private Number iid;
     private Number project_id;
     private String title;
     private String description;
+
     private enum state {
         opened,
         closed,
         locked,
         merged
     }
+
     private String created_at;
     private String updated_at;
     private GitlabAuthor merged_by;
@@ -36,7 +36,7 @@ public class GitlabMergeRequestDTO {
     private String milestone;
     private boolean merge_when_pipeline_succeeds;
     private String merge_status;
-    private String detailed_merge_status;
+    private GitlabDetailedMergeStatus detailed_merge_status;
     private String sha;
     private String merge_commit_sha;
     private String squash_commit_sha;
@@ -163,7 +163,7 @@ public class GitlabMergeRequestDTO {
         return merge_status;
     }
 
-    public String getDetailed_merge_status() {
+    public GitlabDetailedMergeStatus getDetailed_merge_status() {
         return detailed_merge_status;
     }
 

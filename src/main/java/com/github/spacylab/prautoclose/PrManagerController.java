@@ -97,8 +97,13 @@ public class PrManagerController {
             slackMessage.addBlock(headerBlock);
 
             Arrays.stream(entry.getValue()).forEach(pr -> {
-                String txt = String.format("<%s|%s> %n %s | Last update : %s", pr.getWeb_url(), pr.getTitle(),
-                        pr.getAuthor().getName(), pr.getLastUpdateText());
+                String txt = String.format(
+                        "<%s|%s> %n _Status :_ %s %n %s | Last update : %s",
+                        pr.getWeb_url(),
+                        pr.getTitle(),
+                        pr.getDetailedMergeStatusText(),
+                        pr.getAuthor().getName(),
+                        pr.getLastUpdateText());
                 SlackBlockDTO sectionBlock = new SlackBlockDTO("section", new SlackTextBlockDTO("mrkdwn", txt));
                 slackMessage.addBlock(sectionBlock);
             });
