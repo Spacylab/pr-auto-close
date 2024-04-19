@@ -17,15 +17,19 @@ import org.springframework.web.bind.annotation.RestController;
 
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.logging.Logger;
 import java.util.stream.IntStream;
+import java.util.stream.Stream;
 
 @RestController
 public class PrManagerController {
     Logger logger = Logger.getLogger(getClass().getName());
-    @Value("${pr-manager.max-weeks}") private Integer MAX_REMINDER_WEEKS;
-    @Value("#{new Boolean('${pr-manager.should-close-prs:false}')}") private Boolean SHOULD_CLOSE_PRS;
+    @Value("${pr-manager.max-weeks}")
+    private Integer MAX_REMINDER_WEEKS;
+    @Value("#{new Boolean('${pr-manager.should-close-prs:false}')}")
+    private Boolean SHOULD_CLOSE_PRS;
 
     GitlabAPIService gitlabAPIService;
     SlackAPIService slackAPIService;
@@ -39,16 +43,17 @@ public class PrManagerController {
     public Map<String, PullRequestDTO[]> checkPrs(
             @RequestParam(value = "max_weeks", required = false) Integer maxWeeks,
             @RequestParam(value = "accessToken") String accessToken,
-            @RequestParam(value = "projectId") String projectId
-    ) {
+            @RequestParam(value = "projectId") String projectId) {
         maxWeeks = maxWeeks == null ? MAX_REMINDER_WEEKS : maxWeeks;
         gitlabAPIService.setAccessToken(accessToken);
         gitlabAPIService.setProjectId(projectId);
 
-        PullRequestDTO[][] weekReminders = IntStream.range(0, maxWeeks + 1).mapToObj(week ->
-            Arrays.stream(gitlabAPIService.checkPRsFromWeekRange(week, week + 1)).map(PullRequestDTO::new).toArray(PullRequestDTO[]::new)
-        ).toArray(PullRequestDTO[][]::new);
-        var weekRest = Arrays.stream(gitlabAPIService.checkPRsFromWeekRange(maxWeeks)).map(PullRequestDTO::new).toArray(PullRequestDTO[]::new);
+        PullRequestDTO[][] weekReminders = IntStream.range(0, maxWeeks + 1)
+                .mapToObj(week -> Arrays.stream(gitlabAPIService.checkPRsFromWeekRange(week, week + 1))
+                        .map(PullRequestDTO::new).toArray(PullRequestDTO[]::new))
+                .toArray(PullRequestDTO[][]::new);
+        var weekRest = Arrays.stream(gitlabAPIService.checkPRsFromWeekRange(maxWeeks)).map(PullRequestDTO::new)
+                .toArray(PullRequestDTO[]::new);
 
         var oldPrsByWeek = new HashMap<String, PullRequestDTO[]>();
         oldPrsByWeek.put("prToBeClosed", weekRest);
@@ -61,37 +66,52 @@ public class PrManagerController {
 
     @PostMapping(path = "/auto-pr-handling")
     public Object autoPrHandling(
-            @RequestBody AutoPullRequestDTO body
-    ) {
-        var prs = checkPrs(MAX_REMINDER_WEEKS, body.getAccessToken(), body.getProjectId());
-
+            @RequestBody AutoPullRequestDTO body) {
         SlackMessageDTO slackMessage = new SlackMessageDTO();
+        slackAPIService.setSlackWebhook(body.getSlackWebhook());
+
+        List<Map<String, PullRequestDTO[]>> prsList = body.getProjectId().stream()
+                .map(projectId -> checkPrs(MAX_REMINDER_WEEKS, body.getAccessToken(), projectId)).toList();
+
+        HashMap<String, PullRequestDTO[]> prs = new HashMap<>();
+        prsList.forEach(prsMap -> prsMap.entrySet().forEach(entry -> {
+            if (prs.containsKey(entry.getKey())) {
+                prs.put(entry.getKey(),
+                        Stream.concat(Arrays.stream(prs.get(entry.getKey())), Arrays.stream(entry.getValue()))
+                                .toArray(PullRequestDTO[]::new));
+            } else {
+                prs.put(entry.getKey(), entry.getValue());
+            }
+        }));
+
         prs.entrySet().stream().forEach(entry -> {
-            if (entry.getValue().length == 0) {return;}
+            if (entry.getValue().length == 0) {
+                return;
+            }
 
             String weekWording = "0".equals(entry.getKey()) ? "less than 1" : entry.getKey();
-            String headerTxt = entry.getKey().equals("prToBeClosed") 
-                ? String.format(":bomb: PR more than %s weeks old :", MAX_REMINDER_WEEKS) 
-                : String.format(":hourglass: PR %s weeks old :", weekWording);
+            String headerTxt = entry.getKey().equals("prToBeClosed")
+                    ? String.format(":bomb: PR more than %s weeks old :", MAX_REMINDER_WEEKS)
+                    : String.format(":hourglass: PR %s weeks old :", weekWording);
             SlackBlockDTO headerBlock = new SlackBlockDTO("header", new SlackTextBlockDTO("plain_text", headerTxt));
             slackMessage.addBlock(headerBlock);
 
             Arrays.stream(entry.getValue()).forEach(pr -> {
-                String txt = String.format("<%s|%s> %n %s | Last update : %s days ago", pr.getWeb_url(), pr.getTitle(), pr.getAuthor().getName(), pr.getDaysUntouched());
+                String txt = String.format("<%s|%s> %n %s | Last update : %s", pr.getWeb_url(), pr.getTitle(),
+                        pr.getAuthor().getName(), pr.getLastUpdateText());
                 SlackBlockDTO sectionBlock = new SlackBlockDTO("section", new SlackTextBlockDTO("mrkdwn", txt));
                 slackMessage.addBlock(sectionBlock);
             });
         });
 
         if (Boolean.TRUE.equals(SHOULD_CLOSE_PRS)) {
-            Arrays.stream(prs.get("prToBeClosed")).forEach(pr -> gitlabAPIService.closePR(pr.getIid().toString())) ;
+            Arrays.stream(prs.get("prToBeClosed")).forEach(pr -> gitlabAPIService.closePR(pr.getIid().toString()));
         }
-
-        slackAPIService.setSlackWebhook(body.getSlackWebhook());
 
         if (slackMessage.getBlockCount() == 0) {
             Logger.getLogger(getClass().getName()).info("No PRs found!");
-            slackMessage.addBlock(new SlackBlockDTO("section", new SlackTextBlockDTO("mrkdwn", ":tada: No PRs found! :tada:")));
+            slackMessage.addBlock(
+                    new SlackBlockDTO("section", new SlackTextBlockDTO("mrkdwn", ":tada: No PRs found! :tada:")));
         }
         Logger.getLogger(getClass().getName()).info("Sending slack message!");
 

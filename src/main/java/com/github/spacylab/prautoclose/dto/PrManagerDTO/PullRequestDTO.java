@@ -3,16 +3,10 @@ package com.github.spacylab.prautoclose.dto.PrManagerDTO;
 import com.github.spacylab.prautoclose.dto.GitlabDTO.GitlabAuthor;
 import com.github.spacylab.prautoclose.dto.GitlabDTO.GitlabMergeRequestDTO;
 
-import java.time.Duration;
-import java.time.Instant;
-import java.time.ZoneId;
-import java.time.ZonedDateTime;
-
 public class PullRequestDTO {
 
     private String created_at;
     private String updated_at;
-    private Integer days_untouched;
     private GitlabAuthor author;
     private Number id;
     private Number iid;
@@ -22,18 +16,12 @@ public class PullRequestDTO {
     private String web_url;
     private boolean has_conflicts;
 
-    public PullRequestDTO() {}
+    public PullRequestDTO() {
+    }
+
     public PullRequestDTO(GitlabMergeRequestDTO gitlabMergeRequestDTO) {
         this.created_at = gitlabMergeRequestDTO.getCreated_at();
         this.updated_at = gitlabMergeRequestDTO.getUpdated_at();
-        Duration durationLastUpdated = Duration.between(
-            ZonedDateTime.ofInstant(
-                Instant.parse(gitlabMergeRequestDTO.getUpdated_at()),
-                ZoneId.systemDefault()
-            ),
-            ZonedDateTime.now()
-        );
-        this.days_untouched = ((Long)durationLastUpdated.toDays()).intValue();
         this.author = gitlabMergeRequestDTO.getAuthor();
         this.id = gitlabMergeRequestDTO.getId();
         this.iid = gitlabMergeRequestDTO.getIid();
@@ -42,6 +30,10 @@ public class PullRequestDTO {
         this.description = gitlabMergeRequestDTO.getDescription();
         this.web_url = gitlabMergeRequestDTO.getWeb_url();
         this.has_conflicts = gitlabMergeRequestDTO.isHas_conflicts();
+    }
+
+    public String getLastUpdateText() {
+        return new PullRequestLastUpdate(this.created_at, this.updated_at).getLastUpdateText();
     }
 
     public String getCreated_at() {
@@ -58,18 +50,6 @@ public class PullRequestDTO {
 
     public void setUpdated_at(String updated_at) {
         this.updated_at = updated_at;
-        Duration durationLastUpdated = Duration.between(
-                ZonedDateTime.ofInstant(
-                        Instant.parse(updated_at),
-                        ZoneId.systemDefault()
-                ),
-                ZonedDateTime.now()
-        );
-        this.days_untouched = ((Long)durationLastUpdated.toDays()).intValue();
-    }
-
-    public Integer getDaysUntouched() {
-        return days_untouched;
     }
 
     public GitlabAuthor getAuthor() {
